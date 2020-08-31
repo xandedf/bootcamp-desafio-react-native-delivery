@@ -1,3 +1,4 @@
+/* eslint-disable no-return-assign */
 import React, { useEffect, useState } from 'react';
 import { Image, ScrollView } from 'react-native';
 
@@ -55,11 +56,21 @@ const Dashboard: React.FC = () => {
 
   async function handleNavigate(id: number): Promise<void> {
     // Navigate do ProductDetails page
+    navigation.navigate('FoodDetails', {
+      id,
+    });
   }
 
   useEffect(() => {
     async function loadFoods(): Promise<void> {
-      // Load Foods from API
+      const { data } = await api.get<Food[]>('/foods', {
+        params: {
+          category_like: selectedCategory,
+          name_like: searchValue,
+        },
+      });
+      data.map(food => (food.formattedPrice = formatValue(food.price)));
+      setFoods(data);
     }
 
     loadFoods();
@@ -68,6 +79,8 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     async function loadCategories(): Promise<void> {
       // Load categories from API
+      const { data } = await api.get<Category[]>('/categories');
+      setCategories(data);
     }
 
     loadCategories();
@@ -75,6 +88,9 @@ const Dashboard: React.FC = () => {
 
   function handleSelectCategory(id: number): void {
     // Select / deselect category
+    id === selectedCategory
+      ? setSelectedCategory(undefined)
+      : setSelectedCategory(id);
   }
 
   return (
@@ -122,6 +138,7 @@ const Dashboard: React.FC = () => {
             ))}
           </CategorySlider>
         </CategoryContainer>
+
         <FoodsContainer>
           <Title>Pratos</Title>
           <FoodList>

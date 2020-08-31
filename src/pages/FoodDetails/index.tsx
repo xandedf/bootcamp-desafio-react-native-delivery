@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable no-return-assign */
 import React, {
   useEffect,
   useState,
@@ -74,6 +76,13 @@ const FoodDetails: React.FC = () => {
   useEffect(() => {
     async function loadFood(): Promise<void> {
       // Load a specific food with extras based on routeParams id
+      const { data } = await api.get<Food>(`/foods/${routeParams.id}`);
+      data.formattedPrice = formatValue(data.price);
+      setFood(data);
+
+      data.extras.map(extra => (extra.quantity = 0));
+
+      setExtras(data.extras);
     }
 
     loadFood();
@@ -81,26 +90,46 @@ const FoodDetails: React.FC = () => {
 
   function handleIncrementExtra(id: number): void {
     // Increment extra quantity
+    extras.map(extra => {
+      if (extra.id === id) extra.quantity += 1;
+    });
+
+    setExtras([...extras]);
   }
 
   function handleDecrementExtra(id: number): void {
     // Decrement extra quantity
+    extras.map(extra => {
+      if (extra.id === id && extra.quantity >= 1) extra.quantity -= 1;
+    });
+
+    setExtras([...extras]);
   }
 
   function handleIncrementFood(): void {
     // Increment food quantity
+    setFoodQuantity(foodQuantity + 1);
   }
 
   function handleDecrementFood(): void {
     // Decrement food quantity
+    foodQuantity === 1
+      ? setFoodQuantity(foodQuantity)
+      : setFoodQuantity(foodQuantity - 1);
   }
 
   const toggleFavorite = useCallback(() => {
     // Toggle if food is favorite or not
+    setIsFavorite(!!isFavorite);
   }, [isFavorite, food]);
 
   const cartTotal = useMemo(() => {
     // Calculate cartTotal
+    const totalExtras = extras.reduce(
+      (acc, obj) => acc + obj.value * obj.quantity,
+      0,
+    );
+    return formatValue(foodQuantity * food.price + totalExtras);
   }, [extras, food, foodQuantity]);
 
   async function handleFinishOrder(): Promise<void> {
